@@ -28,8 +28,8 @@ module control_unit(
   output reg [1:0] signal_shape
 );
 
-  reg [12:0] phase_M_nxt = 10;
-  reg [10:0] signal_A_nxt = 1000;
+  reg [12:0] phase_M_nxt = 500;
+  reg [10:0] signal_A_nxt = 1200;
   reg [1:0] signal_shape_nxt = 0;    // 0 - sin, 1 - triang, 2 - square 
   
   always@(posedge clk) begin

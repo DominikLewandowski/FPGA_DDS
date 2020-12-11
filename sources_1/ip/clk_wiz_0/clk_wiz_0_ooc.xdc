@@ -54,5 +54,5 @@
 ############################################################
 # Clock Period Constraints                                 #
 ############################################################
-#create_clock -period 30.000 [get_ports sysclk]
+#create_clock -period 8.000 [get_ports sysclk]
 

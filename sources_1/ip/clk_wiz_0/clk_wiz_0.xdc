@@ -53,8 +53,8 @@
 # commented constraints can be used in the top level xdc 
 #----------------------------------------------------------------
 # Connect to input port when clock capable pin is selected for input
-create_clock -period 30.000 [get_ports sysclk]
-set_input_jitter [get_clocks -of_objects [get_ports sysclk]] 0.3
+create_clock -period 8.000 [get_ports sysclk]
+set_input_jitter [get_clocks -of_objects [get_ports sysclk]] 0.08
 
 
 set_false_path -to [get_cells  -hier {*seq_reg*[0]} -filter {is_sequential}]
