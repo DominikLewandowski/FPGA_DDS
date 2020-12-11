@@ -26,15 +26,15 @@ module DDS_generator_tb();
   localparam SIM_N_SAMPLES = 1000;            
 // ------------------------------------------------------------------- // 
 
-  reg clk_33_3MHz; 
+  reg clk_100MHz; 
   
   always begin
-    clk_33_3MHz = 1'b1; #15;
-    clk_33_3MHz = 1'b0; #15;
+    clk_100MHz = 1'b1; #5;
+    clk_100MHz = 1'b0; #5;
   end
 
   DDS_generator DDS_generator_test (
-    .sysclk(clk_33_3MHz),
+    .sysclk(clk_100MHz),
     .reset(1'b0),
     .spi_mosi(),
     .spi_sck(),
