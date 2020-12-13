@@ -2,26 +2,23 @@
 
 
 module digital_to_analog(
-  input wire clk_100MHz,
   input wire clk_1MHz,
   input wire rst,
   input wire [11:0] value_in,
-  output reg spi_mosi,
   output wire spi_sck,
+  output reg spi_mosi,
   output reg spi_cs
 );
 
 
-reg spi_sck_nxt, cs_nxt;
-reg my_clk_nxt, my_clk;
-
-reg[3:0] ctr, ctr_nxt;
-
 localparam wait_for_data=0, send_data=1;
-reg state_nxt, spi_mosi_nxt, state = 0;
+
+reg state, state_nxt, spi_mosi_nxt = 'b0;
 reg spi_cs_nxt = 'b1;
-reg[15:0] to_send_data, to_send_data_nxt;
+reg[3:0] ctr, ctr_nxt;
 reg[11:0] data;
+reg[15:0] to_send_data, to_send_data_nxt;
+
 
 always @(state) begin
     data = ((value_in * 4095)/3312);
@@ -64,18 +61,18 @@ end
 
 always @(negedge clk_1MHz) begin
     if(rst) begin
-        to_send_data = 'b0;
-        ctr = 'b0;
-        state = wait_for_data;
-        spi_mosi = 'b0;
-        spi_cs = 'b1;
+        to_send_data <= 'b0;
+        ctr <= 'b0;
+        state <= wait_for_data;
+        spi_mosi <= 'b0;
+        spi_cs <= 'b1;
     end
     else begin
-        to_send_data = to_send_data_nxt;
-        ctr = ctr_nxt;
-        state = state_nxt;
-        spi_mosi = spi_mosi_nxt;
-        spi_cs = spi_cs_nxt;
+        to_send_data <= to_send_data_nxt;
+        ctr <= ctr_nxt;
+        state <= state_nxt;
+        spi_mosi <= spi_mosi_nxt;
+        spi_cs <= spi_cs_nxt;
     end
 
 end
