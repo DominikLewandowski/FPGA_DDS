@@ -23,18 +23,18 @@
 module control_unit(
   input wire clk,
   input wire rst,
-  output reg [12:0] phase_M,
+  output reg [`ROM_PHASE_BIT-2:0] phase_M,
   output reg [10:0] signal_A,
   output reg [1:0] signal_shape
 );
 
-  reg [12:0] phase_M_nxt = 500;
+  reg [`ROM_PHASE_BIT-2:0] phase_M_nxt = 500;
   reg [10:0] signal_A_nxt = 1200;
   reg [1:0] signal_shape_nxt = 0;    // 0 - sin, 1 - triang, 2 - square 
   
   always@(posedge clk) begin
     if(rst) begin
-      phase_M <= 13'b0;
+      phase_M <= 0;
       signal_A <= 11'b0;
       signal_shape <= 1'b0;
     end

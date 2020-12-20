@@ -45,7 +45,7 @@ module DDS_generator(
   );
   //////////////////////////////////////
   
-  wire [12:0] phase_M;
+  wire [`ROM_PHASE_BIT-2:0] phase_M;
   wire [10:0] signal_A;
   wire [1:0] signal_shape;
 
@@ -57,7 +57,7 @@ module DDS_generator(
     .signal_shape(signal_shape)
   );
   
-  wire [13:0] signal_phase;
+  wire [`ROM_PHASE_BIT-1:0] signal_phase;
   wire [11:0] sample_amplitude [1:0];
   
   phase_accumulator Accumulator (

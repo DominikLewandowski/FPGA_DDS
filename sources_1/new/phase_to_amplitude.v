@@ -23,7 +23,7 @@
 module phase_to_amplitude(
   input wire clk,
   input wire rst,
-  input wire [13:0] phase,
+  input wire [`ROM_PHASE_BIT-1:0] phase,
   input wire [1:0] shape,
   output wire [11:0] amplitude
 );

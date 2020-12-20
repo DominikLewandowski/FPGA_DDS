@@ -23,16 +23,16 @@
 module signal_square_rom(
   input wire clk,
   input wire rst,
-  input wire [13:0] phase,
+  input wire [`ROM_PHASE_BIT-1:0] phase,
   output reg [11:0] value
 );
 
-  reg [11:0] rom [0:16383];
+  reg [11:0] rom [0:`ROM_PHASE_MAX_VAL-1];
 
   initial $readmemh("signal_square.data", rom); 
 
   always @(posedge clk)
-    if( rst ) value <= 12'h000;
+    if( rst ) value <= 0;
     else value <= rom[phase];
   
 endmodule
