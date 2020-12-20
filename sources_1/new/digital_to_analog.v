@@ -1,40 +1,82 @@
 `timescale 1ns / 1ps
-//////////////////////////////////////////////////////////////////////////////////
-// Company: 
-// Engineer: 
-// 
-// Create Date: 08.12.2020 22:06:38
-// Design Name: 
-// Module Name: digital_to_analog
-// Project Name: 
-// Target Devices: 
-// Tool Versions: 
-// Description: 
-// 
-// Dependencies: 
-// 
-// Revision:
-// Revision 0.01 - File Created
-// Additional Comments:
-// 
-//////////////////////////////////////////////////////////////////////////////////
 
 
 module digital_to_analog(
-  input wire clk_100MHz,
   input wire clk_1MHz,
   input wire rst,
   input wire [11:0] value_in,
+  output wire spi_sck,
   output reg spi_mosi,
-  output reg spi_sck,
   output reg spi_cs
 );
 
-  always@(posedge clk_100MHz)
-  begin
-    spi_mosi <= ( |value_in[11:8] );
-    spi_sck <= ( |value_in[7:4] );
-    spi_cs <= ( |value_in[3:0] );
-  end
-  
+
+localparam wait_for_data=0, send_data=1;
+
+reg state, state_nxt, spi_mosi_nxt = 'b0;
+reg spi_cs_nxt = 'b1;
+reg[3:0] ctr, ctr_nxt;
+reg[11:0] data;
+reg[15:0] to_send_data, to_send_data_nxt;
+
+
+always @(state) begin
+    data = ((value_in * 4095)/3312);
+    case(state)
+        wait_for_data : begin
+                            if(value_in != to_send_data[11:0]) begin
+                                to_send_data_nxt = {4'b0011, data[11:0]};
+                                ctr_nxt = 15;
+                                state_nxt = send_data;
+                                spi_mosi_nxt = to_send_data_nxt[15];
+                                spi_cs_nxt = 'b1;
+                            end
+                            else begin
+                                to_send_data_nxt = to_send_data;
+                                ctr_nxt = ctr;
+                                state_nxt = wait_for_data;
+                                spi_mosi_nxt = spi_mosi;
+                                spi_cs_nxt = 'b1;
+                            end
+                        end
+
+        send_data:      begin
+                            if(ctr > 0) begin
+                                to_send_data_nxt = to_send_data;
+                                ctr_nxt = ctr - 1;
+                                state_nxt = send_data;
+                                spi_mosi_nxt = to_send_data[ctr];
+                                spi_cs_nxt = 'b0;
+                            end
+                            else begin
+                                to_send_data_nxt = to_send_data;
+                                ctr_nxt = ctr;
+                                state_nxt = wait_for_data;
+                                spi_mosi_nxt = to_send_data[0];
+                                spi_cs_nxt = 'b0;
+                            end
+                        end
+    endcase
+end
+
+always @(negedge clk_1MHz) begin
+    if(rst) begin
+        to_send_data <= 'b0;
+        ctr <= 'b0;
+        state <= wait_for_data;
+        spi_mosi <= 'b0;
+        spi_cs <= 'b1;
+    end
+    else begin
+        to_send_data <= to_send_data_nxt;
+        ctr <= ctr_nxt;
+        state <= state_nxt;
+        spi_mosi <= spi_mosi_nxt;
+        spi_cs <= spi_cs_nxt;
+    end
+
+end
+
+assign spi_sck = (spi_cs == 'b0) ? clk_1MHz : 'b0;
+
 endmodule

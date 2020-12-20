@@ -81,7 +81,6 @@ module DDS_generator(
   );
   
   digital_to_analog DAC (
-    .clk_100MHz(clk_100MHz),
     .clk_1MHz(clk_1MHz),
     .rst(reset),
     .value_in(sample_amplitude[1]),
