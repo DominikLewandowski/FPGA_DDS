@@ -35,10 +35,12 @@ module DDS_generator(
     .sysclk(sysclk)
   );
   
-  frequency_divider FreqDivider (
+  frequency_divider #( 
+    .DIVIDER(100) 
+  ) FreqDivider_1 (
     .rst(reset),
-    .clk_100MHz(clk_100MHz),
-    .clk_1MHz(clk_1MHz)
+    .clk_in(clk_100MHz),
+    .clk_out(clk_1MHz)
   );
   //////////////////////////////////////
   
