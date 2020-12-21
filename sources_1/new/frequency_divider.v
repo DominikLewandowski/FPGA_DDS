@@ -20,37 +20,36 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 
-module frequency_divider(
+module frequency_divider #(parameter DIVIDER = 2)
+(
   input wire rst,
-  input wire clk_100MHz,
-  output reg clk_1MHz
+  input wire clk_in,
+  output reg clk_out
 );
 
-  localparam DIVIDER = 7'd100;
-
-  reg [6:0] counter, counter_nxt = 7'b0;
-  reg clk_1MHz_nxt = 1'b0;
+  reg [7:0] counter, counter_nxt = 8'b0;
+  reg clk_out_nxt = 1'b0;
   
   always@* begin
     if( counter < ((DIVIDER/2)-1) )
       begin
         counter_nxt = counter + 1;
-        clk_1MHz_nxt = clk_1MHz;
+        clk_out_nxt = clk_out;
       end
     else 
       begin
-        counter_nxt = 7'b0;
-        clk_1MHz_nxt = ~clk_1MHz;
+        counter_nxt = 8'b0;
+        clk_out_nxt = ~clk_out;
       end
   end
   
-  always@(posedge clk_100MHz)
+  always@(posedge clk_in)
     if( rst ) begin
-      clk_1MHz <= 1'b0;
-      counter <= 7'b0;
+      clk_out <= 1'b0;
+      counter <= 8'b0;
     end
     else begin
-      clk_1MHz <= clk_1MHz_nxt;
+      clk_out <= clk_out_nxt;
       counter <= counter_nxt;
     end
 

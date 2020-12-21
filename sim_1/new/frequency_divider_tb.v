@@ -25,12 +25,13 @@ module frequency_divider_tb();
   reg clk_100MHz;
   wire clk_1MHz;
   
-  frequency_divider FreqDivider(
+  frequency_divider #( 
+      .DIVIDER(100) 
+    ) FreqDivider (
     .rst(1'b0),
-    .clk_100MHz(clk_100MHz),
-    .clk_1MHz(clk_1MHz)
+    .clk_in(clk_100MHz),
+    .clk_out(clk_1MHz)
   );
-  
   
  always
    begin
@@ -39,4 +40,5 @@ module frequency_divider_tb();
      clk_100MHz = 1'b0;
      #5;
    end
+   
 endmodule

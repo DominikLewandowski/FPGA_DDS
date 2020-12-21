@@ -23,16 +23,16 @@
 module signal_sine_rom(
   input wire clk,
   input wire rst,
-  input wire [13:0] phase,
-  output reg [11:0] value
+  input wire [`ROM_PHASE_BIT-1:0] phase,
+  output reg [`ROM_AMPLITUDE_BIT-1:0] value
 );
 
-  reg [11:0] rom [0:9999];
+  reg [`ROM_AMPLITUDE_BIT-1:0] rom [0:`ROM_PHASE_MAX_VAL-1];
 
   initial $readmemh("signal_sine.data", rom); 
 
   always @(posedge clk)
-    if( rst ) value <= 12'h000;
+    if( rst ) value <= 0;
     else value <= rom[phase];
     
 endmodule
