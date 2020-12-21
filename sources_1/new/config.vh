@@ -7,4 +7,8 @@
 `define ROM_PHASE_MAX_VAL   14'd10000       // Iloœæ próbek sygna³u
 `define ROM_PHASE_BIT       14              // Iloœæ bitów potrzebna na zapis fazy
 
+// ------ DAC ------ //
+//`define DAC_MAX_V           3300            // Maksymalne napiêcie przetwornika DAC
+`define DAC_MAX_V_BIT       12              // Iloœæ bitów potrzebna na zapis maksymalnego napiêcia
+
 `endif

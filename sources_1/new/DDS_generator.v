@@ -46,7 +46,7 @@ module DDS_generator(
   //////////////////////////////////////
   
   wire [`ROM_PHASE_BIT-2:0] phase_M;
-  wire [10:0] signal_A;
+  wire [`DAC_MAX_V_BIT-2:0] signal_A;
   wire [1:0] signal_shape;
 
   control_unit ControlUnit (
@@ -59,7 +59,7 @@ module DDS_generator(
   
   wire [`ROM_PHASE_BIT-1:0] signal_phase;
   wire [`ROM_AMPLITUDE_BIT-1:0] sample_amplitude_1;
-  wire [11:0] sample_amplitude_2;
+  wire [`DAC_MAX_V_BIT-1:0] sample_amplitude_2;
   
   phase_accumulator Accumulator (
     .clk(clk_1MHz),

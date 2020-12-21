@@ -24,12 +24,12 @@
 module amplitude_control(
   input wire clk,
   input wire rst,
-  input wire [10:0] amplitude_mv,    // max 1650mV  -> 2*1650 = 3300mV = 3.3V -> max DAC Voltage
+  input wire [`DAC_MAX_V_BIT-2:0] amplitude_mv,    // max 1650mV  -> 2*1650 = 3300mV = 3.3V -> max DAC Voltage
   input wire [`ROM_AMPLITUDE_BIT-1:0] value_in,
-  output reg [11:0] value_out
+  output reg [`DAC_MAX_V_BIT-1:0] value_out
 );
 
-  reg [11:0] value_out_nxt;
+  reg [`DAC_MAX_V_BIT-1:0] value_out_nxt;
 
   always @* 
     value_out_nxt = (value_in * amplitude_mv) / `ROM_AMPLITUDE;
