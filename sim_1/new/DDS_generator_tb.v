@@ -42,7 +42,7 @@ module DDS_generator_tb();
   );
   
   wire [11:0] sample_amplitude = DDS_generator_test.sample_amplitude_2;
-  wire clk_1MHz = DDS_generator_test.clk_1MHz;
+  wire clk_DDS = DDS_generator_test.clk_DDS;
   
   integer file_ptr, file_open;
   integer sample_counter = 0;
@@ -57,7 +57,7 @@ module DDS_generator_tb();
     $finish;
   end
   
-  always @(posedge clk_1MHz)
+  always @(posedge clk_DDS)
   begin
     if( file_open == 1) begin
       $fwrite(file_ptr,"%d\n", sample_amplitude);

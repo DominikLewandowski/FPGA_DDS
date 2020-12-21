@@ -29,7 +29,7 @@ module control_unit(
   output reg [1:0] signal_shape
 );
 
-  reg [`ROM_PHASE_BIT-2:0] phase_M_nxt = 500;
+  reg [`ROM_PHASE_BIT-2:0] phase_M_nxt = 10;
   reg [`DAC_MAX_V_BIT-2:0] signal_A_nxt = 1200;
   reg [1:0] signal_shape_nxt = 0;    // 0 - sin, 1 - triang, 2 - square 
   
