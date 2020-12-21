@@ -41,7 +41,7 @@ module DDS_generator_tb();
     .spi_cs()
   );
   
-  wire [11:0] sample_amplitude = DDS_generator_test.sample_amplitude[1];
+  wire [11:0] sample_amplitude = DDS_generator_test.sample_amplitude_2;
   wire clk_1MHz = DDS_generator_test.clk_1MHz;
   
   integer file_ptr, file_open;

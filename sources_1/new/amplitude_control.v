@@ -1,4 +1,5 @@
 `timescale 1ns / 1ps
+`include "config.vh"
 //////////////////////////////////////////////////////////////////////////////////
 // Company: 
 // Engineer: 
@@ -24,15 +25,14 @@ module amplitude_control(
   input wire clk,
   input wire rst,
   input wire [10:0] amplitude_mv,    // max 1650mV  -> 2*1650 = 3300mV = 3.3V -> max DAC Voltage
-  input wire [11:0] value_in,
+  input wire [`ROM_AMPLITUDE_BIT-1:0] value_in,
   output reg [11:0] value_out
 );
 
-  localparam ROM_AMPLITUDE = 1000;
   reg [11:0] value_out_nxt;
 
   always @* 
-    value_out_nxt = (value_in * amplitude_mv) / ROM_AMPLITUDE;
+    value_out_nxt = (value_in * amplitude_mv) / `ROM_AMPLITUDE;
 
   always@(posedge clk)
     if( rst )  value_out <= 0;

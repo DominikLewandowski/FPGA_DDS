@@ -58,7 +58,8 @@ module DDS_generator(
   );
   
   wire [`ROM_PHASE_BIT-1:0] signal_phase;
-  wire [11:0] sample_amplitude [1:0];
+  wire [`ROM_AMPLITUDE_BIT-1:0] sample_amplitude_1;
+  wire [11:0] sample_amplitude_2;
   
   phase_accumulator Accumulator (
     .clk(clk_1MHz),
@@ -72,21 +73,21 @@ module DDS_generator(
     .rst(reset),
     .phase(signal_phase),
     .shape(signal_shape),
-    .amplitude(sample_amplitude[0])
+    .amplitude(sample_amplitude_1)
   );
   
   amplitude_control AmplitudeControl (
     .clk(clk_1MHz),
     .rst(reset),
     .amplitude_mv(signal_A),   
-    .value_in(sample_amplitude[0]),
-    .value_out(sample_amplitude[1])
+    .value_in(sample_amplitude_1),
+    .value_out(sample_amplitude_2)
   );
   
   digital_to_analog DAC (
     .clk_1MHz(clk_1MHz),
     .rst(reset),
-    .value_in(sample_amplitude[1]),
+    .value_in(sample_amplitude_2),
     .spi_mosi(spi_mosi),
     .spi_sck(spi_sck),
     .spi_cs(spi_cs)

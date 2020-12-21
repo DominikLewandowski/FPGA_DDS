@@ -25,10 +25,10 @@ module phase_to_amplitude(
   input wire rst,
   input wire [`ROM_PHASE_BIT-1:0] phase,
   input wire [1:0] shape,
-  output wire [11:0] amplitude
+  output wire [`ROM_AMPLITUDE_BIT-1:0] amplitude
 );
 
-  wire [11:0] signal [2:0];
+  wire [`ROM_AMPLITUDE_BIT-1:0] signal [2:0];
 
   assign amplitude = ( shape == 2'b00 ) ? signal[0] : (( shape == 2'b01 ) ? signal[1] : signal[2]);
 
