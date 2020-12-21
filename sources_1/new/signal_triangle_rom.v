@@ -23,16 +23,16 @@
 module signal_triangle_rom(
   input wire clk,
   input wire rst,
-  input wire [`ROM_PHASE_BIT-1:0] phase,
-  output reg [`ROM_AMPLITUDE_BIT-1:0] value
+  input wire [13:0] phase,
+  output reg [11:0] value
 );
 
-  reg [`ROM_AMPLITUDE_BIT-1:0] rom [0:`ROM_PHASE_MAX_VAL-1];
+  reg [11:0] rom [0:16383];
 
   initial $readmemh("signal_triangle.data", rom); 
 
   always @(posedge clk)
-    if( rst ) value <= 0;
+    if( rst ) value <= 12'h000;
     else value <= rom[phase];
   
 endmodule

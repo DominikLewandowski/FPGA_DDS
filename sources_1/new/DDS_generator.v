@@ -1,5 +1,4 @@
 `timescale 1ns / 1ps
-`include "config.vh"
 //////////////////////////////////////////////////////////////////////////////////
 // Company: 
 // Engineer: 
@@ -29,32 +28,22 @@ module DDS_generator(
   output wire spi_cs
 );
   ///////////// CLOCK ///////////////// 
-  wire clk_100MHz, clk_1MHz, clk_DDS;
+  wire clk_100MHz, clk_1MHz;
    
   clk_wiz_0 clk_config (
     .clk_100MHz(clk_100MHz),              
     .sysclk(sysclk)
   );
   
-  frequency_divider #( 
-    .DIVIDER(100) 
-  ) FreqDivider_1 (
+  frequency_divider FreqDivider (
     .rst(reset),
-    .clk_in(clk_100MHz),
-    .clk_out(clk_1MHz)
-  );
-  
-  frequency_divider #( 
-    .DIVIDER(`DDS_CLOCK_PERIOD) 
-  ) FreqDivider_2 (
-    .rst(reset),
-    .clk_in(clk_1MHz),
-    .clk_out(clk_DDS)
+    .clk_100MHz(clk_100MHz),
+    .clk_1MHz(clk_1MHz)
   );
   //////////////////////////////////////
   
-  wire [`ROM_PHASE_BIT-2:0] phase_M;
-  wire [`DAC_MAX_V_BIT-2:0] signal_A;
+  wire [12:0] phase_M;
+  wire [10:0] signal_A;
   wire [1:0] signal_shape;
 
   control_unit ControlUnit (
@@ -65,37 +54,36 @@ module DDS_generator(
     .signal_shape(signal_shape)
   );
   
-  wire [`ROM_PHASE_BIT-1:0] signal_phase;
-  wire [`ROM_AMPLITUDE_BIT-1:0] sample_amplitude_1;
-  wire [`DAC_MAX_V_BIT-1:0] sample_amplitude_2;
+  wire [13:0] signal_phase;
+  wire [11:0] sample_amplitude [1:0];
   
   phase_accumulator Accumulator (
-    .clk(clk_DDS),
+    .clk(clk_1MHz),
     .rst(reset),
     .M(phase_M),
     .phase(signal_phase)
   );
   
   phase_to_amplitude PhaseToAmplitude (
-    .clk(clk_DDS),
+    .clk(clk_1MHz),
     .rst(reset),
     .phase(signal_phase),
     .shape(signal_shape),
-    .amplitude(sample_amplitude_1)
+    .amplitude(sample_amplitude[0])
   );
   
   amplitude_control AmplitudeControl (
-    .clk(clk_DDS),
+    .clk(clk_1MHz),
     .rst(reset),
     .amplitude_mv(signal_A),   
-    .value_in(sample_amplitude_1),
-    .value_out(sample_amplitude_2)
+    .value_in(sample_amplitude[0]),
+    .value_out(sample_amplitude[1])
   );
   
   digital_to_analog DAC (
     .clk_1MHz(clk_1MHz),
     .rst(reset),
-    .value_in(sample_amplitude_2),
+    .value_in(sample_amplitude[1]),
     .spi_mosi(spi_mosi),
     .spi_sck(spi_sck),
     .spi_cs(spi_cs)

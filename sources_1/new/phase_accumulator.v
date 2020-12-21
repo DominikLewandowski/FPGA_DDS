@@ -23,20 +23,22 @@
 module phase_accumulator(
   input wire clk,
   input wire rst,
-  input wire [`ROM_PHASE_BIT-2:0] M,
-  output reg [`ROM_PHASE_BIT-1:0] phase
+  input wire [12:0] M,
+  output reg [13:0] phase
 );
 
-  reg [`ROM_PHASE_BIT-1:0] phase_nxt = 0;
+  localparam MAX_PHASE_VAL = 14'd10000;
+
+  reg [13:0] phase_nxt = 0;
 
   always @* begin
     if( phase >= 0) begin
-      phase_nxt = ( phase + {1'b0, M} ) % `ROM_PHASE_MAX_VAL;
+      phase_nxt = ( phase + {1'b0, M} ) % MAX_PHASE_VAL;
     end
   end
 
   always@(posedge clk)
-    if( rst ) phase <= 0;
-    else phase <= phase_nxt;
+    if( rst )  phase <= 0;
+    else  phase <= phase_nxt;
  
 endmodule
