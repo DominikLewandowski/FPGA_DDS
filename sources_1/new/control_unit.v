@@ -24,14 +24,31 @@
 module control_unit(
   input wire clk,
   input wire rst,
+  input wire [`ROM_PHASE_BIT-2:0] phase,
+  input wire [`DAC_MAX_V_BIT-2:0] amplitude,
+  input wire [`OFFSET_BIT-1:0] offset,
+  input wire [`SIGNAL_TYPE_BIT-1:0] signal_type,
+  input wire new_data_flag,
   output reg [`ROM_PHASE_BIT-2:0] phase_M,
   output reg [`DAC_MAX_V_BIT-2:0] signal_A,
   output reg [1:0] signal_shape
 );
 
-  reg [`ROM_PHASE_BIT-2:0] phase_M_nxt = 10;
-  reg [`DAC_MAX_V_BIT-2:0] signal_A_nxt = 1200;
-  reg [1:0] signal_shape_nxt = 0;    // 0 - sin, 1 - triang, 2 - square 
+
+  reg [`ROM_PHASE_BIT-2:0] phase_M_nxt=10;
+  reg [`DAC_MAX_V_BIT-2:0] signal_A_nxt=1200;
+  reg [`SIGNAL_TYPE_BIT:0] signal_shape_nxt=0;    // 0 - sin, 1 - triang, 2 - square 
+  
+  always @*
+  begin
+      if(new_data_flag)
+      begin
+          phase_M_nxt<=phase;
+          signal_A_nxt<=amplitude;
+          signal_shape_nxt<=signal_type;
+      end
+      else begin end
+  end
   
   always@(posedge clk) begin
     if(rst) begin
