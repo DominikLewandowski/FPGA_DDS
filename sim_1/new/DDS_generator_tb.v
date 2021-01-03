@@ -22,24 +22,22 @@
 
 module DDS_generator_tb();
 
-// ------------------------------------------------------------------- // 
-  localparam SIM_N_SAMPLES = 1000;            
-// ------------------------------------------------------------------- // 
 
+// ----- CLOCK GENERATOR ------ //
   reg clk_125MHz; 
   
   always begin
     clk_125MHz = 1'b1; #4;
     clk_125MHz = 1'b0; #4;
   end
+// ---------------------------- //
 
-  DDS_generator DDS_generator_test (
-    .sysclk(clk_125MHz),
-    .reset(1'b0),
-    .spi_mosi(),
-    .spi_sck(),
-    .spi_cs()
-  );
+
+
+
+
+// ------ SAVE TO FILE -------- //
+  localparam SIM_N_SAMPLES = 1000;
   
   wire [11:0] sample_amplitude = DDS_generator_test.sample_amplitude_2;
   wire clk_DDS = DDS_generator_test.clk_DDS;
@@ -64,5 +62,16 @@ module DDS_generator_tb();
       sample_counter = sample_counter + 1;
     end
   end
+// -------------------------------------- //
+
+
+
+  DDS_generator DDS_generator_test (
+    .sysclk(clk_125MHz),
+    .reset(1'b0),
+    .spi_mosi(),
+    .spi_sck(),
+    .spi_cs()
+  );
 
 endmodule

@@ -24,6 +24,7 @@
 module DDS_generator( 
   input wire sysclk,
   input wire reset,
+  input wire rx,
   output wire spi_mosi,
   output wire spi_sck,
   output wire spi_cs
@@ -58,8 +59,10 @@ module DDS_generator(
   wire [1:0] signal_shape;
 
   control_unit ControlUnit (
-    .clk(clk_1MHz),
+    .clk_1MHz(clk_1MHz),
+    .clk_100MHz(clk_100MHz),
     .rst(reset),
+    .rx(rx),
     .phase_M(phase_M),
     .signal_A(signal_A),
     .signal_shape(signal_shape)
