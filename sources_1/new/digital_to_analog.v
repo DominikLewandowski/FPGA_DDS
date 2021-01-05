@@ -13,15 +13,21 @@ module digital_to_analog(
 
 localparam wait_for_data=0, send_data=1;
 
+wire[11:0] data;
 reg state, state_nxt, spi_mosi_nxt = 'b0;
 reg spi_cs_nxt = 'b1;
 reg[3:0] ctr, ctr_nxt;
-reg[11:0] data;
 reg[15:0] to_send_data, to_send_data_nxt;
 
 
-always @(state) begin
-    data = ((value_in * 4095)/3312);
+DAC_multiplier my_multiplier(
+    .CLK(clk_1MHz),
+    .A(value_in),
+    .P(data)
+);
+
+
+always @* begin
     case(state)
         wait_for_data : begin
                             if(value_in != to_send_data[11:0]) begin

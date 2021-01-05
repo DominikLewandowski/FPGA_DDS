@@ -24,6 +24,7 @@
 module DDS_generator( 
   input wire sysclk,
   input wire reset,
+  input wire rx,
   output wire spi_mosi,
   output wire spi_sck,
   output wire spi_cs
@@ -53,16 +54,39 @@ module DDS_generator(
   );
   //////////////////////////////////////
   
+  wire [`ROM_PHASE_BIT-2:0] phase;
+  wire [`DAC_MAX_V_BIT-2:0] amplitude;
+  wire [`OFFSET_BIT:0] offset;
+  wire [`SIGNAL_TYPE_BIT:0] signal_type;
+  wire new_data_flag;  
   wire [`ROM_PHASE_BIT-2:0] phase_M;
   wire [`DAC_MAX_V_BIT-2:0] signal_A;
   wire [1:0] signal_shape;
 
+   
   control_unit ControlUnit (
-    .clk(clk_1MHz),
-    .rst(reset),
-    .phase_M(phase_M),
-    .signal_A(signal_A),
-    .signal_shape(signal_shape)
+     .clk(clk_1MHz),
+     .rst(reset),
+      .new_data_flag(new_data_flag),
+     .amplitude(amplitude),
+     .phase(phase),
+     .signal_type(signal_type),
+     .offset(offset),    
+     .phase_M(phase_M),
+     .signal_A(signal_A),
+     .signal_shape(signal_shape)
+   );   
+   
+  uart UartUnit(
+  .clk(clk_1MHz),
+  .clk_100MHz(clk_100MHz),
+  .rst(reset),
+  .rx(rx),
+  .new_data_flag(new_data_flag),
+  .amplitude(amplitude),
+  .frequency(phase),
+  .signal_type(signal_type),
+  .offset(offset)
   );
   
   wire [`ROM_PHASE_BIT-1:0] signal_phase;
