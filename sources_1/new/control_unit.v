@@ -64,7 +64,7 @@ module control_unit(
         signal_shape_nxt <= signal_shape;
       end
     end
-  
+
   always@(posedge clk_1MHz) begin
     if(rst) begin
       phase_M <= 0;
