@@ -19,94 +19,152 @@
 // 
 //////////////////////////////////////////////////////////////////////////////////
 
-module interface
-   #(              
-        parameter BN_ST=2,  // number of bits for signal type
-                  BN_A=11, // number of bits for amplitude
-                  BN_F=13,  // number of bits for frequency
-                  BN_O=12,  // number of bits for offset
-                  
-                  BYTES_ST=1,// number of bytes needed to send signal type
-                  BYTES_A=2, // number of bytes needed to send amplitude
-                  BYTES_F=2, // number of bytes needed to send frequency
-                  BYTES_O=2, // number of bytes needed to send offset
-                  BN=7     // number of data transfer bytes
-    )    
-    (
-        input wire clk, rst,
-        input wire [7:0] data,
-        input wire rx_done,
-        output reg [BN_A-1:0] sig_amplitude,
-        output reg [BN_O-1:0] sig_offset,
-        output reg [BN_F-1:0] sig_frequency,       
-        output reg [BN_ST-1:0] sig_type,
-        output reg new_data_flag     
-    );
-    
-localparam [1:0]
-        IDLE  = 2'b00,
-        RECEIVING  = 2'b01,
-        SENDING  = 2'b10;
-            
-reg [BN_A-1:0] sig_amplitude_nxt;
-reg [BN_O-1:0] sig_offset_nxt;
-reg [BN_F-1:0] sig_frequency_nxt;
-reg [BN_ST-1:0] sig_type_nxt;         
-reg [2:0] byte_counter, byte_counter_nxt;
-reg [1:0] state, state_nxt;
-reg new_data_flag_nxt;
-reg [BN*8-1 :0] data_bus, data_bus_nxt;
 
-always@*
-begin
-    case(state)
-        IDLE:
-            if(rx_done==0) state_nxt<=RECEIVING;
-            else if(byte_counter==BN) state_nxt <= SENDING;
-            else new_data_flag_nxt<=0;
-            
-        RECEIVING:
-            if(rx_done==1)
-            begin
-                data_bus_nxt <= {data[7:0],data_bus[(BN*8-1):8]};
-                byte_counter_nxt <= byte_counter+1;
-                state_nxt <= IDLE;
-            end
-            else begin end
+module interface(
+    input wire clk_1MHz,
+    input wire clk_100MHz,
+    input wire rst,
+    input wire rx,
+    output reg data_ready,
+    output wire [7:0] var_1,
+    output wire [15:0] var_2,
+    output wire [15:0] var_3,
+    output wire [15:0] var_4
+);
+
+    reg [7:0] uart_data [6:0];
+    reg [7:0] uart_data_nxt [6:0];
+    
+    assign var_1 = uart_data[0];
+    assign var_2[15:8] = uart_data[1];
+    assign var_2[7:0] = uart_data[2];
+    assign var_3[15:8] = uart_data[3];
+    assign var_3[7:0] = uart_data[4];
+    assign var_4[15:8] = uart_data[5];
+    assign var_4[7:0] = uart_data[6];
+    
+    reg data_ready_nxt = 1'b0;
+
+    wire rx_empty;
+    wire [7:0] rec_data;
+    
+    reg uart_read, uart_read_nxt = 1'b0;
+
+    uart uart_unit (.clk(clk_100MHz), .reset(rst), .rd_uart(uart_read), .wr_uart(1'b0), .rx(rx),
+        .w_data(0), .tx_full(), .rx_empty(rx_empty), .r_data(rec_data), .tx());
+
+
+    localparam S_IDLE = 3'b000, S_1A = 3'b001, S_2A = 3'b010, S_2B = 3'b011, S_3A = 3'b100, S_3B = 3'b101, S_4A = 3'b110, S_4B = 3'b111;
+    reg [2:0] state, state_nxt = S_IDLE;
+    
+    always@*
+    begin
+        uart_read_nxt = 1'b0;
+        state_nxt = state;
+        data_ready_nxt = 1'b0;
         
-        SENDING:                            
-        begin
-            sig_amplitude_nxt <= data_bus[(BN*8-1)-(BYTES_A*8-BN_A) : (BN*8)-BYTES_A*8];
-            sig_offset_nxt<= data_bus[(BN*8-1)-BYTES_A*8-(BYTES_O*8-BN_O) : (BN*8)-(BYTES_A+BYTES_O)*8];
-            sig_frequency_nxt<=data_bus[(BN*8-1)-(BYTES_A+BYTES_O)*8-(BYTES_F*8-BN_F) : BYTES_ST*8 ];
-            sig_type_nxt<=data_bus[(BYTES_ST*8-1) : 0];
-            
-            byte_counter_nxt <= 0;
-            new_data_flag_nxt <= 1;        
-            state_nxt<=IDLE;             
+        uart_data_nxt[0] = uart_data[0];
+        uart_data_nxt[1] = uart_data[1];
+        uart_data_nxt[2] = uart_data[2];
+        uart_data_nxt[3] = uart_data[3];
+        uart_data_nxt[4] = uart_data[4];
+        uart_data_nxt[5] = uart_data[5];
+        uart_data_nxt[6] = uart_data[6];
+        
+        case(state)
+            S_IDLE:
+                if( rx_empty == 0 ) state_nxt = S_1A;
+ 
+            S_1A:       // SHAPE
+                if( (rx_empty == 0) && (uart_read == 0) )
+                begin
+                    uart_data_nxt[0] = rec_data;
+                    uart_read_nxt = 1'b1;
+                    state_nxt = S_2A;
+                end
+
+            S_2A:       // FREQUENCY - MSB
+                if( (rx_empty == 0) && (uart_read == 0) )
+                begin
+                    uart_data_nxt[1] = rec_data;
+                    uart_read_nxt = 1'b1;
+                    state_nxt = S_2B;
+                end
+
+            S_2B:       // FREQUENCY - LSB
+                if( (rx_empty == 0) && (uart_read == 0) )
+                begin
+                    uart_data_nxt[2] = rec_data;
+                    uart_read_nxt = 2'b1;
+                    state_nxt = S_3A;
+                end
+
+            S_3A:       // OFFSET - MSB
+                if( (rx_empty == 0) && (uart_read == 0) )
+                begin
+                    uart_data_nxt[3] = rec_data;
+                    uart_read_nxt = 2'b1;
+                    state_nxt = S_3B;
+                end
+
+            S_3B:       // OFFSET - LSB
+                if( (rx_empty == 0) && (uart_read == 0) )
+                begin
+                    uart_data_nxt[4] = rec_data;
+                    uart_read_nxt = 2'b1;
+                    state_nxt = S_4A;
+                end
+
+            S_4A:       // AMPLITUDE - MSB
+                if( (rx_empty == 0) && (uart_read == 0) )
+                begin
+                    uart_data_nxt[5] = rec_data;
+                    uart_read_nxt = 2'b1;
+                    state_nxt = S_4B;
+                end 
+
+            S_4B:       // AMPLITUDE - LSB
+                if( (rx_empty == 0) && (uart_read == 0) )
+                begin
+                    uart_data_nxt[6] = rec_data;
+                    uart_read_nxt = 2'b1;
+                    state_nxt = S_IDLE;
+                    data_ready_nxt = 1'b1;
+                end 
+
+            default:
+                state_nxt = S_IDLE;
+
+        endcase
+    end
+
+    always@(posedge clk_1MHz)
+    begin
+        if(rst) begin
+            uart_read <= 0;
+            state <= S_IDLE;
+            data_ready <= 0;
+
+            uart_data[0] <= 0;
+            uart_data[1] <= 0;
+            uart_data[2] <= 0;
+            uart_data[3] <= 0;
+            uart_data[4] <= 0;
+            uart_data[5] <= 0;
+            uart_data[6] <= 0;
+
+        end else begin
+            uart_read <= uart_read_nxt;
+            state <= state_nxt;
+            data_ready <= data_ready_nxt;
+
+            uart_data[0] <= uart_data_nxt[0];
+            uart_data[1] <= uart_data_nxt[1];
+            uart_data[2] <= uart_data_nxt[2];
+            uart_data[3] <= uart_data_nxt[3];
+            uart_data[4] <= uart_data_nxt[4];
+            uart_data[5] <= uart_data_nxt[5];
+            uart_data[6] <= uart_data_nxt[6];
         end
-    endcase
-end
-        
-always@(posedge clk)
-    begin
-    if(rst)
-    begin
-        data_bus<=0;
-        {sig_amplitude, sig_offset, sig_frequency, sig_type} <= 0;
-        byte_counter <= 0;
-        state<=0;
     end
-    else
-    begin
-        new_data_flag <= new_data_flag_nxt;
-        byte_counter<=byte_counter_nxt;
-        state<=state_nxt;
-        {sig_amplitude, sig_offset, sig_frequency, sig_type} <= {sig_amplitude_nxt, sig_offset_nxt, sig_frequency_nxt,sig_type_nxt }; 
-        data_bus <= data_bus_nxt;
-    end
-end        
-    
-    
-    
 endmodule

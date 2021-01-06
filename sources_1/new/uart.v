@@ -19,56 +19,56 @@
 // 
 //////////////////////////////////////////////////////////////////////////////////
 
-// parameters values must sum to BN*8, the order of delivering data in rx must be: signal_type, freq_MSB, freq_LSB, offset, amplitude_MSB, amplitude_LSB  
-module uart
-   #(              
-    parameter BN_ST=`SIGNAL_TYPE_BIT,       // number of bits for signal type
-              BN_A=`DAC_MAX_V_BIT-1,        // number of bits for amplitude
-              BN_F=`ROM_PHASE_BIT-1,        // number of bits for frequency
-              BN_O=`OFFSET_BIT,             // number of bits for offset
-              
-              BYTES_ST=`SIGNAL_TYPE_BYTE,   // number of bytes needed to send signal type
-              BYTES_A=`AMPLITUDE_BYTE,      // number of bytes needed to send amplitude
-              BYTES_F=`FREQUENCY_BYTE,      // number of bytes needed to send frequency
-              BYTES_O=`OFFSET_BYTE,         // number of bytes needed to send offset
-              BN=`TOTAL_BYTE                // number of data transfer bytes              
-    )
-    (
-        input wire rx, clk, clk_100MHz, rst,
-        output wire new_data_flag,
-        output wire [BN_A-1:0] amplitude,
-        output wire [BN_F-1:0] frequency,
-        output wire [BN_ST-1:0] signal_type,
-        output wire [BN_O-1:0] offset
-    );
-    
-    wire s_tick, rx_done;
-    wire [7:0] data;
-    
-    uart_rx uart_unit(
-        .rx(rx),
-        .rst(rst),
-        .s_tick(s_tick),
-        .dout(data),
-        .rx_done(rx_done)
-    );
-    baud_gen baud_gen_unit(
-        .clk_100MHz(clk_100MHz),
-        .rst(rst),
-        .s_tick(s_tick)
-    );
-    interface #(.BN_ST(BN_ST),.BN_A(BN_A),.BN_O(BN_O),.BN_F(BN_F),.BN(BN),.BYTES_ST(BYTES_ST),.BYTES_A(BYTES_A),.BYTES_F(BYTES_F),.BYTES_O(BYTES_O))
-    interface_unit(
-        .rx_done(rx_done),
-        .clk(clk),
-        .rst(rst),
-        .data(data),
-        .new_data_flag(new_data_flag),
-        .sig_amplitude(amplitude),
-        .sig_frequency(frequency),
-        .sig_offset(offset),
-        .sig_type(signal_type)    
-    );
 
-    
+//Listing 8.4
+module uart
+   #( // Default setting:
+      // 19,200 baud, 8 data bits, 1 stop bit, 2^2 FIFO
+      parameter DBIT = 8,     // # data bits
+                SB_TICK = 16, // # ticks for stop bits, 16/24/32
+                              // for 1/1.5/2 stop bits
+                DVSR = 326,   // baud rate divisor
+                              // DVSR = 100M/(16*baud rate)
+                DVSR_BIT = 9, // # bits of DVSR
+                FIFO_W = 2    // # addr bits of FIFO
+                              // # words in FIFO=2^FIFO_W
+   )
+   (
+    input wire clk, reset,
+    input wire rd_uart, wr_uart, rx,
+    input wire [7:0] w_data,
+    output wire tx_full, rx_empty, tx,
+    output wire [7:0] r_data
+   );
+
+   // signal declaration
+   wire tick, rx_done_tick, tx_done_tick;
+   wire tx_empty, tx_fifo_not_empty;
+   wire [7:0] tx_fifo_out, rx_data_out;
+
+   //body
+   mod_m_counter #(.M(DVSR), .N(DVSR_BIT)) baud_gen_unit
+      (.clk(clk), .reset(reset), .q(), .max_tick(tick));
+
+   uart_rx #(.DBIT(DBIT), .SB_TICK(SB_TICK)) uart_rx_unit
+      (.clk(clk), .reset(reset), .rx(rx), .s_tick(tick),
+       .rx_done_tick(rx_done_tick), .dout(rx_data_out));
+
+   fifo #(.B(DBIT), .W(FIFO_W)) fifo_rx_unit
+      (.clk(clk), .reset(reset), .rd(rd_uart),
+       .wr(rx_done_tick), .w_data(rx_data_out),
+       .empty(rx_empty), .full(), .r_data(r_data));
+
+   fifo #(.B(DBIT), .W(FIFO_W)) fifo_tx_unit
+      (.clk(clk), .reset(reset), .rd(tx_done_tick),
+       .wr(wr_uart), .w_data(w_data), .empty(tx_empty),
+       .full(tx_full), .r_data(tx_fifo_out));
+
+   uart_tx #(.DBIT(DBIT), .SB_TICK(SB_TICK)) uart_tx_unit
+      (.clk(clk), .reset(reset), .tx_start(tx_fifo_not_empty),
+       .s_tick(tick), .din(tx_fifo_out),
+       .tx_done_tick(tx_done_tick), .tx(tx));
+
+   assign tx_fifo_not_empty = ~tx_empty;
+
 endmodule

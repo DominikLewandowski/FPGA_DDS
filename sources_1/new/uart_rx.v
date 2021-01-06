@@ -1,97 +1,119 @@
-module uart_rx(
-    input wire rx,
-    input wire s_tick,
-    input wire rst,
-    output reg [7:0] dout,
-    output reg rx_done
-);
+`timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Company: 
+// Engineer: 
+// 
+// Create Date: 04.01.2021 20:09:57
+// Design Name: 
+// Module Name: uart_rx
+// Project Name: 
+// Target Devices: 
+// Tool Versions: 
+// Description: 
+// 
+// Dependencies: 
+// 
+// Revision:
+// Revision 0.01 - File Created
+// Additional Comments:
+// 
+//////////////////////////////////////////////////////////////////////////////////
 
-localparam [1:0]
-    IDLE  = 2'b00,
-    DATA  = 2'b01,
-    STOP  = 2'b10;
-          
-reg [3:0] counter, counter_nxt;
-reg [3:0] bit_count, bit_count_nxt;
-reg [1:0] state, state_nxt;
 
-reg [7:0] dout_nxt; 
-reg rx_done_nxt;
+//Listing 8.1
+module uart_rx
+   #(
+     parameter DBIT = 8,     // # data bits
+               SB_TICK = 16  // # ticks for stop bits
+   )
+   (
+    input wire clk, reset,
+    input wire rx, s_tick,
+    output reg rx_done_tick,
+    output wire [7:0] dout
+   );
 
-initial
-begin
-    bit_count=0;
-    counter=0;
-    state=0;
-end
+   // symbolic state declaration
+   localparam [1:0]
+      idle  = 2'b00,
+      start = 2'b01,
+      data  = 2'b10,
+      stop  = 2'b11;
 
-always@*
-begin
-     case(state)
-      IDLE:
-        if(rx == 0 && counter == 4'd7)
-        begin
-            rx_done_nxt <= 0;
-            state_nxt <= DATA;
-            counter_nxt <= 0;
-            bit_count_nxt <= 0;
-            dout_nxt <= 8'b0;
-        end 
-        else 
-        begin
-            state_nxt<=IDLE;
-            bit_count_nxt<=0;
-            rx_done_nxt=1;
-            counter_nxt <= counter + 1;
-        end
-      DATA:
-       if(counter == 4'd15)
-       begin
-            state_nxt <= DATA;
-            dout_nxt <= {rx, dout[7:1]};
-            bit_count_nxt <= bit_count + 1;
-            counter_nxt <= counter + 1;
-            if(bit_count == 3'd7) 
-            begin
-                state_nxt <= STOP;
-                bit_count_nxt <= 0;
-                rx_done_nxt <= 0;
-            end
-       end 
-       else 
-       begin
-           counter_nxt <= counter + 1;
-       end
-      STOP:
-       if(counter == 4'd15) begin
-           rx_done_nxt <= 1;
-           state_nxt <= IDLE;
-           counter_nxt <= 0;
-       end
-       else
-       begin
-            counter_nxt <= counter + 1;
-       end
-       
-     endcase
-end
+   // signal declaration
+   reg [1:0] state_reg, state_next;
+   reg [3:0] s_reg, s_next;
+   reg [2:0] n_reg, n_next;
+   reg [7:0] b_reg, b_next;
 
-always @(posedge s_tick)
-begin
-    if(rst)
-    begin
-        state<=IDLE;
-        counter<=4'b0;
-        rx_done<=1'b1;
-    end
-    else
-    begin
-        bit_count<=bit_count_nxt;
-        counter<=counter_nxt;
-        state<=state_nxt;
-        dout<=dout_nxt;
-        rx_done<=rx_done_nxt;
-    end
-end
+   // body
+   // FSMD state & data registers
+   always @(posedge clk, posedge reset)
+      if (reset)
+         begin
+            state_reg <= idle;
+            s_reg <= 0;
+            n_reg <= 0;
+            b_reg <= 0;
+         end
+      else
+         begin
+            state_reg <= state_next;
+            s_reg <= s_next;
+            n_reg <= n_next;
+            b_reg <= b_next;
+         end
+
+   // FSMD next-state logic
+   always @*
+   begin
+      state_next = state_reg;
+      rx_done_tick = 1'b0;
+      s_next = s_reg;
+      n_next = n_reg;
+      b_next = b_reg;
+      case (state_reg)
+         idle:
+            if (~rx)
+               begin
+                  state_next = start;
+                  s_next = 0;
+               end
+         start:
+            if (s_tick)
+               if (s_reg==7)
+                  begin
+                     state_next = data;
+                     s_next = 0;
+                     n_next = 0;
+                  end
+               else
+                  s_next = s_reg + 1;
+         data:
+            if (s_tick)
+               if (s_reg==15)
+                  begin
+                     s_next = 0;
+                     b_next = {rx, b_reg[7:1]};
+                     if (n_reg==(DBIT-1))
+                        state_next = stop ;
+                      else
+                        n_next = n_reg + 1;
+                   end
+               else
+                  s_next = s_reg + 1;
+         stop:
+            if (s_tick)
+               if (s_reg==(SB_TICK-1))
+                  begin
+                     state_next = idle;
+                     rx_done_tick =1'b1;
+                  end
+               else
+                  s_next = s_reg + 1;
+      endcase
+   end
+   // output
+   assign dout = b_reg;
 
 endmodule
