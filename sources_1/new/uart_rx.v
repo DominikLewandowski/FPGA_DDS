@@ -41,10 +41,17 @@ module uart_rx
       stop  = 2'b11;
 
    // signal declaration
-   reg [1:0] state_reg, state_next;
-   reg [3:0] s_reg, s_next;
-   reg [2:0] n_reg, n_next;
-   reg [7:0] b_reg, b_next;
+   reg [1:0] state_reg, state_next = idle;
+   reg [3:0] s_reg, s_next = 0;
+   reg [2:0] n_reg, n_next = 0;
+   reg [7:0] b_reg, b_next = 0;
+   
+   initial begin
+        state_reg = idle;
+        s_reg = 0;
+        n_reg = 0;
+        b_reg = 0;
+   end
 
    // body
    // FSMD state & data registers

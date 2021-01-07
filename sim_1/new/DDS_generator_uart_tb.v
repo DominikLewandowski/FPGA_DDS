@@ -22,99 +22,56 @@
 
 module DDS_generator_uart_tb();
 
-// ---------------------- CLOCK GENERATOR -------------------- //
-  reg clk_125MHz; 
-  always begin
-    clk_125MHz = 1'b1; #4;
-    clk_125MHz = 1'b0; #4;
-  end
+    localparam SIM_N_SAMPLES = 2000;
 
-
-  reg rx = 1;
-
-  wire [11:0] sample_amplitude = DDS_generator_test.sample_amplitude_2;
-  wire clk_DDS = DDS_generator_test.clk_DDS;
-
+    localparam SINE = 8'h00;
+    localparam TRANG = 8'h01;
+    localparam SQUARE = 8'h02;
+    
+    reg clk_125MHz; 
+    reg rx = 1;
+    wire clk_DDS = DDS_generator_test.clk_DDS;
 
 // ----------------------- UART TEST ------------------------- //
-
-    reg [7:0] data_signal_type = 8'h01;
-    reg [15:0] data_M = 16'h7702;
-    reg [15:0] data_offset = 16'hFFFF;
-    reg [15:0] data_amplitude = 16'h6645;
-
     integer i;
+    wire data_received = DDS_generator_test.ControlUnit.read_flag;
 
     initial begin
-        wait (sample_amplitude >= 0);
-
-        // -------- data_signal_type -------- //
-        #104000
-        rx = 0;
+        #100000
+        // ___________ type ___ M ___ offset _ amplitude _____ //
+        SendConfigData(TRANG, 16'd100, 16'd1650, 16'd1000);
+        // ___________ type ___ M ___ offset _ amplitude _____ //
+        SendConfigData(SQUARE, 16'd100, 16'd1650, 16'd1000);
+    end 
+    
+    task UartSendByte;
+        input reg [7:0] data;
+    begin
+        #52083; rx = 0;
         for( i = 0; i < 8; i = i + 1 ) begin
-            #104000
-            rx = data_signal_type[i];
+            #52083; rx = data[i];
         end
-        #104000
-        rx = 1;
-        // ------- data_M (MSB byte) ------ //
-        #104000
-        rx = 0;
-        for( i = 8; i < 16; i = i + 1 ) begin
-            #104000
-            rx = data_M[i];
-        end
-        #104000
-        rx = 1;
-        // ------- data_M (LSB byte) ----- //
-        #104000
-        rx = 0;
-        for( i = 0; i < 8; i = i + 1 ) begin
-            #104000
-            rx = data_M[i];
-        end
-        #104000
-        rx = 1;
-        // ------- data_offset (MSB byte) ------ //
-        #104000
-        rx = 0;
-        for( i = 8; i < 16; i = i + 1 ) begin
-            #104000
-            rx = data_offset[i];
-        end
-        #104000
-        rx = 1;
-        // ------- data_offset (LSB byte) ----- //
-        #104000
-        rx = 0;
-        for( i = 0; i < 8; i = i + 1 ) begin
-            #104000
-            rx = data_offset[i];
-        end
-        #104000
-        rx = 1; 
-        // ------- data_amplitude (MSB byte) ------ //
-        #104000
-        rx = 0;
-        for( i = 8; i < 16; i = i + 1 ) begin
-            #104000
-            rx = data_amplitude[i];
-        end
-        #104000
-        rx = 1;
-        // ------- data_amplitude (LSB byte) ----- //
-        #104000
-        rx = 0;
-        for( i = 0; i < 8; i = i + 1 ) begin
-            #104000
-            rx = data_amplitude[i];
-        end
-        #104000
-        rx = 1;
+        #52083; rx = 1;
+    end 
+    endtask
+    
+    task SendConfigData;
+        input reg [7:0] data_signal_type;
+        input reg [15:0] data_M;
+        input reg [15:0] data_offset;
+        input reg [15:0] data_amplitude;
+    begin
+        UartSendByte(data_signal_type[7:0]);        // data_signal_type
+        UartSendByte(data_M[15:8]);                 // data_M (MSB byte)
+        UartSendByte(data_M[7:0]);                  // data_M (LSB byte)
+        UartSendByte(data_offset[15:8]);            // data_offset (MSB byte)
+        UartSendByte(data_offset[7:0]);             // data_offset (LSB byte)
+        UartSendByte(data_amplitude[15:8]);         // data_amplitude (MSB byte)
+        UartSendByte(data_amplitude[7:0]);          // data_amplitude (LSB byte)
     end
+    endtask
   
 // -------------------- SAVE TO FILE ------------------------- //
-    localparam SIM_N_SAMPLES = 2000;
 
     DDS_generator DDS_generator_test (
         .sysclk(clk_125MHz),
@@ -124,7 +81,9 @@ module DDS_generator_uart_tb();
         .spi_sck(),
         .spi_cs()
     );
-  
+    
+    wire [11:0] sample_amplitude = DDS_generator_test.sample_amplitude_2;
+
     integer file_ptr, file_open;
     integer sample_counter = 0;
     
@@ -145,5 +104,11 @@ module DDS_generator_uart_tb();
         sample_counter = sample_counter + 1;
     end
   end
-// ----------------------------------------------------------- //
+
+// ---------------------- CLOCK GENERATOR -------------------- //
+  always begin
+    clk_125MHz = 1'b1; #4;
+    clk_125MHz = 1'b0; #4;
+  end
+
 endmodule
