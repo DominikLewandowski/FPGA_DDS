@@ -25,6 +25,14 @@ module uart_tx
    reg [2:0] n_reg, n_next;
    reg [7:0] b_reg, b_next;
    reg tx_reg, tx_next;
+   
+   initial begin
+        state_reg = idle;
+        s_reg = 0;
+        n_reg = 0;
+        b_reg = 0;
+        tx_reg = 1'b1;
+   end
 
    // body
    // FSMD state & data registers

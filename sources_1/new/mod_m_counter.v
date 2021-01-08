@@ -35,6 +35,10 @@ module mod_m_counter
    //signal declaration
    reg [N-1:0] r_reg;
    wire [N-1:0] r_next;
+   
+   initial begin
+        r_reg = 0;
+   end
 
    // body
    // register

@@ -51,7 +51,7 @@ module interface(
     reg uart_read, uart_read_nxt = 1'b0;
 
     uart uart_unit (.clk(clk_100MHz), .reset(rst), .rd_uart(uart_read), .wr_uart(1'b0), .rx(rx),
-        .w_data(0), .tx_full(), .rx_empty(rx_empty), .r_data(rec_data), .tx());
+        .w_data(8'b0), .tx_full(), .rx_empty(rx_empty), .r_data(rec_data), .tx());
 
 
     localparam S_IDLE = 3'b000, S_1A = 3'b001, S_2A = 3'b010, S_2B = 3'b011, S_3A = 3'b100, S_3B = 3'b101, S_4A = 3'b110, S_4B = 3'b111;

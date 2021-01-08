@@ -40,7 +40,14 @@ module fifo
    reg [W-1:0] r_ptr_reg, r_ptr_next, r_ptr_succ;
    reg full_reg, empty_reg, full_next, empty_next;
    wire wr_en;
-
+   
+   initial begin
+        w_ptr_reg = 0;
+        r_ptr_reg = 0;
+        full_reg = 1'b0;
+        empty_reg = 1'b1;
+   end
+   
    // body
    // register file write operation
    always @(posedge clk)
