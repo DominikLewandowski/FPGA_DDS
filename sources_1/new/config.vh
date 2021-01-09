@@ -8,7 +8,7 @@
 `define ROM_PHASE_BIT       15              // Number of samples in ROM - size (bits)
 
 // ------ DAC ------ //
-//`define DAC_MAX_V           3300          // Maxixmum output voltage of the DAC
+`define DAC_MAX_V           3300          // Maxixmum output voltage of the DAC
 `define DAC_MAX_V_BIT       12              // Maxixmum output voltage of the DAC - size (bits)
 
 // ------ DDS ------ //
