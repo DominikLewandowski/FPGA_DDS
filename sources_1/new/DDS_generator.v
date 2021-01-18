@@ -56,6 +56,7 @@ module DDS_generator(
   
   wire [`ROM_PHASE_BIT-2:0] phase_M;
   wire [`DAC_MAX_V_BIT-2:0] signal_A;
+  wire [`DAC_MAX_V_BIT-1:0] offset;
   wire [1:0] signal_shape;
 
   control_unit ControlUnit (
@@ -64,6 +65,7 @@ module DDS_generator(
     .rst(reset),
     .rx(rx),
     .phase_M(phase_M),
+    .offset(offset),
     .signal_A(signal_A),
     .signal_shape(signal_shape)
   );
@@ -92,6 +94,7 @@ module DDS_generator(
     .rst(reset),
     .amplitude_mv(signal_A),   
     .value_in(sample_amplitude_1),
+    .offset(offset),
     .value_out(sample_amplitude_2)
   );
   

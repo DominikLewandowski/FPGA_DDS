@@ -22,7 +22,7 @@
 
 module DDS_generator_uart_tb();
 
-    localparam SIM_N_SAMPLES = 2000;
+    localparam SIM_N_SAMPLES = 1000;
 
     localparam SINE = 8'h00;
     localparam TRANG = 8'h01;
@@ -39,9 +39,11 @@ module DDS_generator_uart_tb();
     initial begin
         #100000
         // ___________ type ___ M ___ offset _ amplitude _____ //
-        SendConfigData(TRANG, 16'd100, 16'd1650, 16'd1000);
+        SendConfigData(SINE, 16'd100, 16'd0, 16'd500);
         // ___________ type ___ M ___ offset _ amplitude _____ //
-        SendConfigData(SQUARE, 16'd100, 16'd1650, 16'd1000);
+        SendConfigData(SINE, 16'd100, 16'd1000, 16'd500);
+        // ___________ type ___ M ___ offset _ amplitude _____ //
+        SendConfigData(SINE, 16'd100, 16'd2000, 16'd500);
     end 
     
     task UartSendByte;
@@ -82,11 +84,11 @@ module DDS_generator_uart_tb();
         .spi_cs()
     );
     
-    wire [11:0] sample_amplitude = DDS_generator_test.sample_amplitude_2;
+    wire [11:0] sample_amplitude = DDS_generator_test.AmplitudeControl.value_out;
 
     integer file_ptr, file_open;
     integer sample_counter = 0;
-    
+
     initial begin
         wait (sample_amplitude >= 0);
         file_ptr = $fopen("signal_output.txt","w");

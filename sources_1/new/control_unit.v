@@ -26,6 +26,7 @@ module control_unit(
   input wire clk_100MHz,
   input wire rst,
   input wire rx,
+  output reg [`DAC_MAX_V_BIT-1:0] offset,
   output reg [`ROM_PHASE_BIT-2:0] phase_M,
   output reg [`DAC_MAX_V_BIT-2:0] signal_A,
   output reg [1:0] signal_shape
@@ -34,6 +35,7 @@ module control_unit(
     // ---------- DEFAULT VALUES ----------- //
     reg [`ROM_PHASE_BIT-2:0] phase_M_nxt = 10;          // Phase M (samples)
     reg [`DAC_MAX_V_BIT-2:0] signal_A_nxt = 1000;       // Amplitude (mV)
+    reg [`DAC_MAX_V_BIT-1:0] offset_nxt = 1000;            // Offset (mV)
     reg [1:0] signal_shape_nxt = 0;                     // 0 - sin, 1 - triang, 2 - square
     // ------------------------------------- //
 
@@ -58,7 +60,9 @@ module control_unit(
         phase_M_nxt <= var2;
         signal_A_nxt <= var4;
         signal_shape_nxt <= var1;
+        offset_nxt <= var3;
       end else begin
+        offset_nxt <= offset;
         phase_M_nxt <= phase_M;
         signal_A_nxt <= signal_A;
         signal_shape_nxt <= signal_shape;
@@ -70,8 +74,10 @@ module control_unit(
       phase_M <= 0;
       signal_A <= 0;
       signal_shape <= 0;
+      offset <= 0;
     end
     else begin
+      offset <= offset_nxt;
       phase_M <= phase_M_nxt;
       signal_A <= signal_A_nxt;
       signal_shape <= signal_shape_nxt;
